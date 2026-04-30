@@ -26,11 +26,9 @@ const token = localStorage.getItem('token')
 const send = async () => {
   messages.value.push({ role: '我', content: input.value })
 
-  const res = await axios.post(
-    'http://127.0.0.1:8000/ai/chat',
-    { message: input.value },
-    { headers: { Authorization: 'Bearer ' + token } }
-  )
+  const res = await axios.post('/api/ai/chat', { message: input.value }, {
+    headers: { Authorization: 'Bearer ' + token }
+  })
 
   messages.value.push({ role: 'AI', content: res.data.reply })
   input.value = ''
