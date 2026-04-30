@@ -1,3 +1,4 @@
+requests
 langgraph
 langchain-core
 langchain>=0.2.0

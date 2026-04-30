@@ -5,18 +5,16 @@
       <!-- 账户信息 -->
       <div class="section">
         <div class="section-header">
-          <span class="section-icon">◎</span>
+          <span class="section-icon">&#9678;</span>
           <h3>账户信息</h3>
         </div>
-        <div class="form-group">
-          <div class="field">
-            <label>用户名</label>
-            <div class="field-row">
-              <input v-model="newUsername" :placeholder="currentUsername" />
-              <button @click="updateUsername" :disabled="!newUsername || usernameLoading">
-                {{ usernameLoading ? '保存中' : '保存' }}
-              </button>
-            </div>
+        <div class="field">
+          <label>用户名</label>
+          <div class="field-row">
+            <input v-model="newUsername" :placeholder="currentUsername" />
+            <button @click="updateUsername" :disabled="!newUsername || usernameLoading">
+              {{ usernameLoading ? '保存中...' : '保存' }}
+            </button>
           </div>
         </div>
         <div v-if="usernameMsg" class="msg" :class="usernameMsgType">{{ usernameMsg }}</div>
@@ -25,7 +23,7 @@
       <!-- 修改密码 -->
       <div class="section">
         <div class="section-header">
-          <span class="section-icon">◈</span>
+          <span class="section-icon">&#9733;</span>
           <h3>修改密码</h3>
         </div>
         <div class="form-group">
@@ -48,10 +46,10 @@
         </button>
       </div>
 
-      <!-- 地址管理 -->
+      <!-- 收货地址 -->
       <div class="section">
         <div class="section-header">
-          <span class="section-icon">◉</span>
+          <span class="section-icon">&#9737;</span>
           <h3>收货地址</h3>
         </div>
 
@@ -101,10 +99,7 @@ const updateUsername = async () => {
   usernameLoading.value = true
   usernameMsg.value = ''
   try {
-    await axios.put('/api/user/update', null, {
-      params: { username: newUsername.value },
-      headers
-    })
+    await axios.put('/api/user/update', null, { params: { username: newUsername.value }, headers })
     localStorage.setItem('username', newUsername.value)
     currentUsername.value = newUsername.value
     newUsername.value = ''
@@ -139,8 +134,7 @@ const updatePassword = async () => {
   pwdMsg.value = ''
   try {
     await axios.put('/api/user/change-password', null, {
-      params: { old_password: pwd.value.old, new_password: pwd.value.new1 },
-      headers
+      params: { old_password: pwd.value.old, new_password: pwd.value.new1 }, headers
     })
     pwdMsg.value = '密码修改成功，请重新登录'
     pwdMsgType.value = 'success'
@@ -160,12 +154,7 @@ const addrLoading = ref(false)
 const addrMsg = ref('')
 const addrMsgType = ref('success')
 
-const loadAddresses = async () => {
-  try {
-    const res = await axios.get('/api/address/', { headers })
-    addresses.value = res.data
-  } catch {}
-}
+const loadAddresses = async () => { try { const res = await axios.get('/api/address/', { headers }); addresses.value = res.data } catch {} }
 
 const addAddress = async () => {
   if (!newAddr.value.name || !newAddr.value.phone || !newAddr.value.detail) {
@@ -194,35 +183,47 @@ onMounted(loadAddresses)
 
 <style scoped>
 .profile { padding: 0; }
-.profile-sections { display: flex; flex-direction: column; gap: 20px; }
-.section { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 24px; }
-.section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
-.section-icon { font-size: 16px; color: #7c5cbf; }
-.section-header h3 { font-size: 16px; font-weight: 600; color: #fff; }
-.form-group { display: flex; flex-direction: column; gap: 14px; margin-bottom: 14px; }
-.field { display: flex; flex-direction: column; gap: 6px; }
-.field label { font-size: 12px; color: rgba(255,255,255,0.4); letter-spacing: 0.5px; }
-.field-row { display: flex; gap: 8px; }
+.profile-sections { display: flex; flex-direction: column; gap: 22px; }
+.section { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); border-radius: 20px; padding: 28px; }
+.section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
+.section-icon { font-size: 16px; color: #7C5CBF; }
+.section-header h3 { font-size: 17px; font-weight: 600; color: #fff; }
+.form-group { display: flex; flex-direction: column; gap: 16px; margin-bottom: 16px; }
+.field { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
+.field label { font-size: 12px; color: rgba(255,255,255,0.35); letter-spacing: 0.5px; font-weight: 500; }
+.field-row { display: flex; gap: 10px; }
 .field-row input { flex: 1; }
-.field-row button { padding: 10px 18px; background: rgba(124,92,191,0.35); border: 1px solid rgba(124,92,191,0.4); border-radius: 10px; color: #fff; cursor: pointer; font-size: 13px; white-space: nowrap; transition: opacity 0.2s; }
-.field-row button:hover { opacity: 0.8; }
+.field-row button {
+  padding: 10px 20px; background: rgba(124,92,191,0.2); border: 1px solid rgba(124,92,191,0.3);
+  border-radius: 10px; color: #fff; cursor: pointer; font-size: 13px; font-weight: 500;
+  white-space: nowrap; transition: all 0.3s;
+}
+.field-row button:hover { background: rgba(124,92,191,0.4); }
 .field-row button:disabled { opacity: 0.4; cursor: not-allowed; }
-input { padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #fff; font-size: 14px; outline: none; transition: border-color 0.2s; width: 100%; box-sizing: border-box; }
-input:focus { border-color: rgba(124,92,191,0.5); }
-input::placeholder { color: rgba(255,255,255,0.2); }
-.msg { padding: 9px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 12px; }
-.msg.success { background: rgba(74,222,128,0.1); color: #4ade80; border: 1px solid rgba(74,222,128,0.2); }
-.msg.error { background: rgba(248,113,113,0.1); color: #f87171; border: 1px solid rgba(248,113,113,0.2); }
-.action-btn { padding: 10px 24px; background: linear-gradient(135deg, #7c5cbf, #5b8af0); border: none; border-radius: 10px; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
-.action-btn:hover { opacity: 0.85; }
-.action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.empty-addr { color: rgba(255,255,255,0.3); font-size: 14px; margin-bottom: 16px; }
-.addr-card { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; margin-bottom: 8px; }
-.addr-info { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+input {
+  padding: 11px 15px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px; color: #fff; font-size: 14px; outline: none; transition: all 0.3s;
+  width: 100%; box-sizing: border-box;
+}
+input:focus { border-color: rgba(124,92,191,0.5); background: rgba(255,255,255,0.07); box-shadow: 0 0 0 3px rgba(124,92,191,0.06); }
+input::placeholder { color: rgba(255,255,255,0.15); }
+.msg { padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 12px; }
+.msg.success { background: rgba(74,222,128,0.08); color: #4ade80; border: 1px solid rgba(74,222,128,0.15); }
+.msg.error { background: rgba(248,113,113,0.08); color: #f87171; border: 1px solid rgba(248,113,113,0.15); }
+.action-btn {
+  padding: 11px 28px; background: linear-gradient(135deg, #7C5CBF, #5B8AF0); border: none;
+  border-radius: 12px; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s;
+}
+.action-btn:hover { box-shadow: 0 4px 16px rgba(124,92,191,0.3); transform: translateY(-1px); }
+.action-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.empty-addr { color: rgba(255,255,255,0.25); font-size: 14px; margin-bottom: 16px; padding: 12px 0; }
+.addr-card { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; margin-bottom: 8px; transition: all 0.3s; }
+.addr-card:hover { border-color: rgba(255,255,255,0.1); }
+.addr-info { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
 .addr-name { font-size: 14px; font-weight: 600; color: #fff; }
-.addr-phone { font-size: 13px; color: rgba(255,255,255,0.45); }
-.addr-detail { font-size: 13px; color: rgba(255,255,255,0.45); }
-.add-addr-label { font-size: 13px; color: rgba(255,255,255,0.4); margin: 16px 0 10px; }
-.addr-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.addr-phone { font-size: 13px; color: rgba(255,255,255,0.4); }
+.addr-detail { font-size: 13px; color: rgba(255,255,255,0.4); }
+.add-addr-label { font-size: 13px; color: rgba(255,255,255,0.3); margin: 20px 0 10px; font-weight: 500; }
+.addr-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
 .addr-inputs input.full { grid-column: 1 / -1; }
 </style>

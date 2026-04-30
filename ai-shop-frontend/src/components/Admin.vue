@@ -8,13 +8,14 @@
     <!-- 添加商品 -->
     <div v-if="panel === 'product'" class="panel">
       <h3 class="panel-title">添加新商品</h3>
+      <p class="panel-desc">填写商品信息，完成后将展示在商城中</p>
       <div class="form-grid">
         <div class="field">
           <label>商品名称</label>
           <input v-model="product.name" placeholder="请输入商品名称" />
         </div>
         <div class="field">
-          <label>价格 (¥)</label>
+          <label>价格 (&yen;)</label>
           <input v-model.number="product.price" type="number" placeholder="0.00" />
         </div>
         <div class="field">
@@ -32,6 +33,7 @@
       </div>
       <div v-if="productMsg" class="msg" :class="productMsgType">{{ productMsg }}</div>
       <button class="submit-btn" @click="addProduct" :disabled="productLoading">
+        <span v-if="productLoading" class="spinner-sm"></span>
         {{ productLoading ? '提交中...' : '添加商品' }}
       </button>
     </div>
@@ -46,6 +48,7 @@
       </div>
       <div v-if="knowledgeMsg" class="msg" :class="knowledgeMsgType">{{ knowledgeMsg }}</div>
       <button class="submit-btn" @click="addKnowledge" :disabled="knowledgeLoading">
+        <span v-if="knowledgeLoading" class="spinner-sm"></span>
         {{ knowledgeLoading ? '提交中...' : '添加到知识库' }}
       </button>
     </div>
@@ -119,23 +122,33 @@ const addKnowledge = async () => {
 
 <style scoped>
 .admin { padding: 0; }
-.admin-tabs { display: flex; gap: 4px; background: rgba(255,255,255,0.04); border-radius: 12px; padding: 4px; margin-bottom: 24px; width: fit-content; }
-.admin-tabs button { padding: 8px 20px; background: transparent; border: none; color: rgba(255,255,255,0.45); border-radius: 9px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
-.admin-tabs button.active { background: rgba(124,92,191,0.35); color: #fff; }
-.panel { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 28px; }
-.panel-title { font-size: 17px; font-weight: 600; color: #fff; margin-bottom: 6px; }
-.panel-desc { font-size: 13px; color: rgba(255,255,255,0.35); margin-bottom: 20px; }
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
-.field { display: flex; flex-direction: column; gap: 6px; }
+.admin-tabs { display: flex; gap: 4px; background: rgba(255,255,255,0.04); border-radius: 14px; padding: 5px; margin-bottom: 28px; width: fit-content; }
+.admin-tabs button { padding: 10px 22px; background: transparent; border: none; color: rgba(255,255,255,0.45); border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.3s; }
+.admin-tabs button.active { background: rgba(124,92,191,0.3); color: #fff; box-shadow: 0 2px 8px rgba(124,92,191,0.15); }
+.panel { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); border-radius: 20px; padding: 32px; }
+.panel-title { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+.panel-desc { font-size: 13px; color: rgba(255,255,255,0.3); margin-bottom: 24px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 22px; }
+.field { display: flex; flex-direction: column; gap: 7px; }
 .field.full { grid-column: 1 / -1; }
-.field label { font-size: 12px; color: rgba(255,255,255,0.45); letter-spacing: 0.5px; }
-.field input, .field textarea { padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #fff; font-size: 14px; outline: none; resize: vertical; font-family: inherit; transition: border-color 0.2s; }
-.field input:focus, .field textarea:focus { border-color: rgba(124,92,191,0.5); }
-.field input::placeholder, .field textarea::placeholder { color: rgba(255,255,255,0.2); }
-.msg { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; }
-.msg.success { background: rgba(74,222,128,0.1); color: #4ade80; border: 1px solid rgba(74,222,128,0.2); }
-.msg.error { background: rgba(248,113,113,0.1); color: #f87171; border: 1px solid rgba(248,113,113,0.2); }
-.submit-btn { padding: 11px 28px; background: linear-gradient(135deg, #7c5cbf, #5b8af0); border: none; border-radius: 10px; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
-.submit-btn:hover { opacity: 0.85; }
-.submit-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.field label { font-size: 12px; color: rgba(255,255,255,0.35); letter-spacing: 0.5px; font-weight: 500; }
+.field input, .field textarea {
+  padding: 11px 15px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px; color: #fff; font-size: 14px; outline: none; resize: vertical;
+  font-family: inherit; transition: all 0.3s;
+}
+.field input:focus, .field textarea:focus { border-color: rgba(124,92,191,0.5); background: rgba(255,255,255,0.07); box-shadow: 0 0 0 3px rgba(124,92,191,0.06); }
+.field input::placeholder, .field textarea::placeholder { color: rgba(255,255,255,0.15); }
+.msg { padding: 11px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; }
+.msg.success { background: rgba(74,222,128,0.08); color: #4ade80; border: 1px solid rgba(74,222,128,0.15); }
+.msg.error { background: rgba(248,113,113,0.08); color: #f87171; border: 1px solid rgba(248,113,113,0.15); }
+.submit-btn {
+  display: flex; align-items: center; gap: 8px; padding: 12px 32px;
+  background: linear-gradient(135deg, #7C5CBF, #5B8AF0); border: none; border-radius: 12px;
+  color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s;
+}
+.submit-btn:hover { box-shadow: 0 4px 16px rgba(124,92,191,0.3); transform: translateY(-1px); }
+.submit-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+.spinner-sm { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>
