@@ -19,32 +19,43 @@ def get_db():
 
 @router.post("/create")
 def create_order(db: Session = Depends(get_db), user=Depends(get_current_user)):
-    cart_items = db.query(Cart).filter(Cart.user_id == user["user_id"]).all()
+    cart_items = db.query(Cart).filter(
+        Cart.user_id == user["user_id"]
+    ).with_for_update().all()
+
     if not cart_items:
         raise HTTPException(status_code=400, detail="购物车为空")
+
+    product_ids = [c.product_id for c in cart_items]
+    products = {
+        p.id: p
+        for p in db.query(Product).filter(Product.id.in_(product_ids)).all()
+    }
 
     total_price = 0
     order = Order(user_id=user["user_id"], total_price=0)
     db.add(order)
-    db.commit()
-    db.refresh(order)
+    db.flush()
 
-    for item in cart_items:
-        product = db.query(Product).filter(Product.id == item.product_id).first()
-        if not product:
-            continue
-        total_price += product.price * item.quantity
-        db.add(OrderItem(
-            order_id=order.id,
-            product_id=product.id,
-            quantity=item.quantity,
-            price=product.price
-        ))
-    order.total_price = total_price
+    try:
+        for item in cart_items:
+            product = products.get(item.product_id)
+            if not product:
+                continue
+            total_price += product.price * item.quantity
+            db.add(OrderItem(
+                order_id=order.id,
+                product_id=product.id,
+                quantity=item.quantity,
+                price=product.price
+            ))
 
-    # 清空购物车
-    db.query(Cart).filter(Cart.user_id == user["user_id"]).delete()
-    db.commit()
+        order.total_price = total_price
+        db.query(Cart).filter(Cart.user_id == user["user_id"]).delete()
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="下单失败")
 
     return {"msg": "下单成功", "total_price": total_price}
 
@@ -54,7 +65,10 @@ def pay_order(address_id: int,
               db: Session = Depends(get_db),
               user=Depends(get_current_user)):
 
-    cart_items = db.query(Cart).filter(Cart.user_id == user["user_id"]).all()
+    cart_items = db.query(Cart).filter(
+        Cart.user_id == user["user_id"]
+    ).with_for_update().all()
+
     if not cart_items:
         raise HTTPException(status_code=400, detail="购物车为空")
 
@@ -64,26 +78,35 @@ def pay_order(address_id: int,
     if address.user_id != user["user_id"]:
         raise HTTPException(status_code=403, detail="无权使用该地址")
 
+    product_ids = [c.product_id for c in cart_items]
+    products = {
+        p.id: p
+        for p in db.query(Product).filter(Product.id.in_(product_ids)).all()
+    }
+
     total_price = 0
-    order = Order(user_id=user["user_id"], total_price=0, status="paid")
+    order = Order(user_id=user["user_id"], address_id=address_id, total_price=0, status="paid")
     db.add(order)
-    db.commit()
-    db.refresh(order)
+    db.flush()
 
-    for item in cart_items:
-        product = db.query(Product).filter(Product.id == item.product_id).first()
-        if product:
-            total_price += product.price * item.quantity
-            db.add(OrderItem(
-                order_id=order.id,
-                product_id=product.id,
-                quantity=item.quantity,
-                price=product.price
-            ))
-    order.total_price = total_price
+    try:
+        for item in cart_items:
+            product = products.get(item.product_id)
+            if product:
+                total_price += product.price * item.quantity
+                db.add(OrderItem(
+                    order_id=order.id,
+                    product_id=product.id,
+                    quantity=item.quantity,
+                    price=product.price
+                ))
 
-    db.query(Cart).filter(Cart.user_id == user["user_id"]).delete()
-    db.commit()
+        order.total_price = total_price
+        db.query(Cart).filter(Cart.user_id == user["user_id"]).delete()
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="支付失败")
 
     return {"msg": "支付成功", "order_id": order.id, "total_price": total_price}
 

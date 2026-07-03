@@ -77,12 +77,28 @@
       </div>
 
     </div>
+
+      <!-- 管理员面板 -->
+      <div v-if="isAdmin" class="section">
+        <div class="section-header">
+          <span class="section-icon">&#9881;</span>
+          <h3>后台管理</h3>
+          <span class="admin-badge">管理员</span>
+        </div>
+        <Admin />
+      </div>
+
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
+import Admin from './Admin.vue'
+
+const props = defineProps({
+  isAdmin: Boolean
+})
 
 const token = localStorage.getItem('token')
 const headers = { Authorization: 'Bearer ' + token }
@@ -188,6 +204,7 @@ onMounted(loadAddresses)
 .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
 .section-icon { font-size: 16px; color: #7C5CBF; }
 .section-header h3 { font-size: 17px; font-weight: 600; color: #fff; }
+.admin-badge { font-size: 10px; padding: 3px 10px; background: rgba(240,160,80,0.15); color: #f0a050; border: 1px solid rgba(240,160,80,0.3); border-radius: 99px; font-weight: 500; letter-spacing: 1px; margin-left: auto; }
 .form-group { display: flex; flex-direction: column; gap: 16px; margin-bottom: 16px; }
 .field { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
 .field label { font-size: 12px; color: rgba(255,255,255,0.35); letter-spacing: 0.5px; font-weight: 500; }

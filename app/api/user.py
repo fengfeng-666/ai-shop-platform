@@ -21,21 +21,27 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     existing = db.query(User).filter(User.username == user.username).first()
     if existing:
         raise HTTPException(status_code=400, detail="用户名已存在")
+    if len(user.username.strip()) < 2:
+        raise HTTPException(status_code=400, detail="用户名至少2个字符")
     db_user = User(
-        username=user.username,
+        username=user.username.strip(),
         password=hash_password(user.password)
     )
     db.add(db_user)
-    db.commit()
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="注册失败")
     return {"msg": "注册成功"}
 
 @router.post("/login")
 def login(user: UserLogin, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.username == user.username).first()
     if not db_user:
-        return {"msg": "用户不存在"}
+        raise HTTPException(status_code=401, detail="用户名或密码错误")
     if not verify_password(user.password, db_user.password):
-        return {"msg": "密码错误"}
+        raise HTTPException(status_code=401, detail="用户名或密码错误")
     token = create_access_token({
         "user_id": db_user.id,
         "role": db_user.role
@@ -63,7 +69,11 @@ def update_username(
         raise HTTPException(status_code=404, detail="用户不存在")
 
     db_user.username = username
-    db.commit()
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="修改失败")
     return {"msg": "用户名修改成功"}
 
 # 修改密码
@@ -85,5 +95,9 @@ def change_password(
         raise HTTPException(status_code=400, detail="新密码长度不能少于6位")
 
     db_user.password = hash_password(new_password)
-    db.commit()
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="修改失败")
     return {"msg": "密码修改成功"}

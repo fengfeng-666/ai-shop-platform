@@ -6,5 +6,6 @@ class Order(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
+    address_id = Column(Integer, ForeignKey("addresses.id"), nullable=True)
     total_price = Column(Float)
     status = Column(String(20), default="pending")  # pending / paid

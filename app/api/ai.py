@@ -1,13 +1,13 @@
 # app/api/ai.py
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from app.core.ai import chat_with_qwen
 from app.core.deps import get_current_user
 
 router = APIRouter()
 
 class ChatRequest(BaseModel):
-    message: str
+    message: str = Field(min_length=1, max_length=2000)
 
 @router.post("/chat")
 def chat_ai(data: ChatRequest, user=Depends(get_current_user)):

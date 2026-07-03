@@ -1,11 +1,15 @@
 from langchain_community.vectorstores import FAISS
 from langchain_core.embeddings import Embeddings
 import os
+import logging
 import requests
+import threading
 from typing import List
 from dotenv import load_dotenv
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 DASHSCOPE_EMBEDDING_URL = "https://dashscope.aliyuncs.com/api/v1/services/embeddings/text-embedding/text-embedding"
 DASHSCOPE_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -37,21 +41,24 @@ class DashScopeEmbeddings(Embeddings):
 embedding = DashScopeEmbeddings(api_key=DASHSCOPE_API_KEY)
 
 vector_store = None
-_all_texts = []  # 保存所有文本，用于重建索引
+_all_texts = []
+_lock = threading.Lock()
 
 
 def add_knowledge(texts: list):
-    """添加知识到向量存储。重建整个FAISS索引以保证docstore一致性。"""
     global vector_store, _all_texts
-    _all_texts.extend(texts)
-    vector_store = FAISS.from_texts(_all_texts, embedding)
+    with _lock:
+        _all_texts.extend(texts)
+        vector_store = FAISS.from_texts(_all_texts, embedding)
 
 
 def search_knowledge(query: str):
-    if vector_store is None:
-        return []
-    try:
-        docs = vector_store.similarity_search(query, k=3)
-        return [doc.page_content for doc in docs]
-    except Exception:
-        return []
+    with _lock:
+        if vector_store is None:
+            return []
+        try:
+            docs = vector_store.similarity_search(query, k=3)
+            return [doc.page_content for doc in docs]
+        except Exception as e:
+            logger.warning(f"知识库搜索失败: {e}")
+            return []

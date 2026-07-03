@@ -1,6 +1,6 @@
 <template>
   <div class="shop">
-    <!-- 导航栏 -->
+    <!-- 顶部标题栏 -->
     <header class="topbar">
       <div class="brand" @click="tab = 'shop'">
         <svg class="brand-logo" viewBox="0 0 64 64" fill="none">
@@ -20,22 +20,7 @@
         </svg>
         <span class="brand-text">灵境商坊</span>
       </div>
-      <nav class="nav">
-        <button
-          v-for="item in navItems"
-          :key="item.key"
-          :class="{ active: tab === item.key }"
-          @click="tab = item.key"
-        >
-          {{ item.label }}
-          <span v-if="item.key === 'cart' && cartCount > 0" class="badge">{{ cartCount }}</span>
-        </button>
-      </nav>
       <div class="user-info">
-        <button class="profile-btn" :class="{ active: tab === 'profile' }" @click="tab = 'profile'">
-          <span class="avatar">{{ username.charAt(0) }}</span>
-          <span>{{ username }}</span>
-        </button>
         <button class="logout-btn" @click="logout">退出</button>
       </div>
     </header>
@@ -182,25 +167,40 @@
         </div>
       </main>
 
-      <!-- 管理 -->
-      <main v-else-if="tab === 'admin' && isAdmin" key="admin" class="content">
-        <h2 class="page-title"><span class="admin-badge">管理员</span>后台管理</h2>
-        <Admin />
-      </main>
-
       <!-- 个人主页 -->
       <main v-else-if="tab === 'profile'" key="profile" class="content">
-        <h2 class="page-title">个人主页</h2>
-        <Profile />
+        <h2 class="page-title">我的</h2>
+        <Profile :is-admin="isAdmin" />
       </main>
     </transition>
+
+    <!-- 底部导航栏 -->
+    <nav class="bottom-nav">
+      <button
+        v-for="item in navItems"
+        :key="item.key"
+        :class="{ active: tab === item.key }"
+        @click="tab = item.key"
+      >
+        <span class="nav-icon">{{ item.icon }}</span>
+        <span class="nav-label">
+          {{ item.label }}
+          <span v-if="item.key === 'cart' && cartCount > 0" class="badge">{{ cartCount }}</span>
+        </span>
+      </button>
+      <button :class="{ active: tab === 'profile' }" @click="tab = 'profile'">
+        <span class="nav-icon">
+          <span class="avatar-sm">{{ username.charAt(0) }}</span>
+        </span>
+        <span class="nav-label">我的</span>
+      </button>
+    </nav>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import axios from 'axios'
-import Admin from './Admin.vue'
 import Profile from './Profile.vue'
 
 const emit = defineEmits(['logout'])
@@ -213,16 +213,12 @@ const parseToken = (t) => { try { return JSON.parse(atob(t.split('.')[1])) } cat
 const tokenPayload = parseToken(token)
 const isAdmin = computed(() => tokenPayload.role === 'admin')
 
-const navItems = computed(() => {
-  const items = [
-    { key: 'shop', label: '商城' },
-    { key: 'cart', label: '购物车' },
-    { key: 'orders', label: '我的订单' },
-    { key: 'ai', label: 'AI 助手' },
-  ]
-  if (isAdmin.value) items.push({ key: 'admin', label: '管理' })
-  return items
-})
+const navItems = [
+  { key: 'shop', label: '商城', icon: '◇' },
+  { key: 'cart', label: '购物车', icon: '▥' },
+  { key: 'orders', label: '订单', icon: '▦' },
+  { key: 'ai', label: 'AI助手', icon: '✦' },
+]
 
 const colors = ['#7c5cbf,#5b8af0', '#f093fb,#f5576c', '#4facfe,#00f2fe', '#43e97b,#38f9d7', '#fa709a,#fee140', '#a18cd1,#fbc2eb', '#fccb90,#d57eeb', '#667eea,#764ba2']
 const imgGradient = (id) => { const c = colors[id % colors.length]; return `linear-gradient(135deg,${c})` }
@@ -294,52 +290,60 @@ onMounted(() => { loadProducts(); loadCart() })
 /* 全局 */
 .shop { min-height: 100vh; background: linear-gradient(180deg, #08080F 0%, #0c0c16 100%); color: #e8e8e8; display: flex; flex-direction: column; }
 
-/* 导航栏 */
+/* 顶部栏 */
 .topbar {
-  display: flex; align-items: center; gap: 20px; padding: 0 28px; height: 64px;
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  padding: 0 28px; height: 56px;
   background: rgba(12,12,18,0.85); border-bottom: 1px solid rgba(255,255,255,0.06);
   position: sticky; top: 0; z-index: 100; backdrop-filter: blur(16px);
 }
 .brand { display: flex; align-items: center; gap: 10px; cursor: pointer; flex-shrink: 0; }
-.brand-logo { width: 32px; height: 32px; }
+.brand-logo { width: 30px; height: 30px; }
 .brand-text {
-  font-size: 17px; font-weight: 700; letter-spacing: 3px;
+  font-size: 16px; font-weight: 700; letter-spacing: 3px;
   background: linear-gradient(135deg, #c9b8f0, #8bb0f8);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
-.nav { display: flex; gap: 2px; flex: 1; }
-.nav button {
-  padding: 8px 16px; background: transparent; border: none; color: rgba(255,255,255,0.5);
-  border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 500;
-  transition: all 0.25s ease; position: relative;
-}
-.nav button:hover { color: #fff; background: rgba(255,255,255,0.05); }
-.nav button.active { color: #fff; background: rgba(124,92,191,0.2); }
-.badge {
-  position: absolute; top: 4px; right: 6px; background: #f5576c; color: #fff;
-  font-size: 10px; min-width: 18px; height: 18px; border-radius: 9px;
-  display: flex; align-items: center; justify-content: center; padding: 0 5px;
-  box-shadow: 0 2px 8px rgba(245,87,108,0.3);
-}
 .user-info { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.profile-btn {
-  display: flex; align-items: center; gap: 8px; padding: 6px 14px 6px 6px;
-  background: transparent; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px;
-  color: rgba(255,255,255,0.6); cursor: pointer; font-size: 13px; transition: all 0.25s;
-}
-.profile-btn:hover, .profile-btn.active { border-color: rgba(124,92,191,0.5); color: #fff; background: rgba(124,92,191,0.1); }
-.avatar {
-  width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #7C5CBF, #5B8AF0);
-  display: flex; align-items: center; justify-content: center; color: #fff; font-size: 13px; font-weight: 600;
-}
 .logout-btn {
-  padding: 7px 14px; background: transparent; border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 10px; color: rgba(255,255,255,0.4); cursor: pointer; font-size: 13px; transition: all 0.25s;
+  padding: 6px 12px; background: transparent; border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px; color: rgba(255,255,255,0.4); cursor: pointer; font-size: 12px; transition: all 0.25s;
 }
 .logout-btn:hover { border-color: rgba(248,113,113,0.4); color: #f87171; }
 
 /* 内容区 */
-.content { flex: 1; max-width: 1120px; width: 100%; margin: 0 auto; padding: 32px 24px; }
+.content { flex: 1; max-width: 1120px; width: 100%; margin: 0 auto; padding: 32px 24px 80px; }
+
+/* 底部导航栏 */
+.bottom-nav {
+  display: flex; justify-content: space-around; align-items: flex-start;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(14,14,22,0.92); border-top: 1px solid rgba(255,255,255,0.08);
+  padding: 8px 0 max(8px, env(safe-area-inset-bottom)); backdrop-filter: blur(16px);
+}
+.bottom-nav button {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 6px 16px; background: transparent; border: none;
+  color: rgba(255,255,255,0.4); cursor: pointer;
+  font-size: 10px; font-weight: 500; transition: all 0.25s ease;
+  position: relative; min-width: 56px;
+}
+.bottom-nav button:hover { color: rgba(255,255,255,0.6); }
+.bottom-nav button.active { color: #c9b8f0; }
+.nav-icon { font-size: 20px; line-height: 1; }
+.nav-label { position: relative; }
+.avatar-sm {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: linear-gradient(135deg, #7C5CBF, #5B8AF0);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 10px; font-weight: 600;
+}
+.badge {
+  position: absolute; top: -8px; right: -14px; background: #f5576c; color: #fff;
+  font-size: 10px; min-width: 16px; height: 16px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; padding: 0 4px;
+  box-shadow: 0 2px 8px rgba(245,87,108,0.3);
+}
 
 /* 淡入动画 */
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease, transform 0.2s ease; }
@@ -487,7 +491,7 @@ onMounted(() => { loadProducts(); loadCart() })
 .order-status.pending { background: rgba(240,160,80,0.12); color: #fbbf24; }
 
 /* AI 页面 */
-.ai-page { display: flex; flex-direction: column; height: calc(100vh - 64px); padding-bottom: 0; }
+.ai-page { display: flex; flex-direction: column; height: calc(100vh - 56px - 32px - 80px); }
 .chat-window { flex: 1; overflow-y: auto; padding: 24px 0; display: flex; flex-direction: column; gap: 14px; }
 .chat-hint { text-align: center; padding: 60px 20px; }
 .hint-icon { font-size: 42px; margin-bottom: 16px; opacity: 0.3; }
